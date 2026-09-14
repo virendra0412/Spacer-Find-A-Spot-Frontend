@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 // Point this at your backend. Expo Go on a physical phone can't reach
 // "localhost" on your laptop — use your machine's LAN IP (e.g. 192.168.x.x)
 // or a deployed URL. See the frontend plan doc, section 7.
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.23:4000';
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://spacer-find-a-spot-backend.onrender.com';
 
 const ACCESS_KEY = 'spacer_access_token';
 const REFRESH_KEY = 'spacer_refresh_token';
