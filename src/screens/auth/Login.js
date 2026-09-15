@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Input from '../../components/Input';
+import PasswordInput from '../../components/PasswordInput';
 import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
 import { colors, fonts, spacing } from '../../theme';
@@ -41,9 +43,8 @@ export default function Login({ navigation }) {
             onChangeText={setPhone}
             placeholder="9990001111"
           />
-          <Input
+          <PasswordInput
             label="Password"
-            secureTextEntry
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"

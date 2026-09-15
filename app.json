@@ -8,23 +8,17 @@
     "splash": {
       "backgroundColor": "#14171C"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Spacer uses your location to find parking spots near you."
+        "NSLocationWhenInUseUsageDescription": "Spacer uses your location to find parking spots near you.",
+        "NSCameraUsageDescription": "Spacer needs your camera to take a photo of your parking spot.",
+        "NSPhotoLibraryUsageDescription": "Spacer needs access to your photos to add a listing photo."
       }
     },
     "android": {
-      "package": "com.spacer.findaspot",
-      "permissions": [
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ]
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "CAMERA"]
     },
     "plugins": [
       [
@@ -32,12 +26,15 @@
         {
           "locationWhenInUsePermission": "Spacer uses your location to find parking spots near you."
         }
+      ],
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Spacer needs access to your photos to add a listing photo.",
+          "cameraPermission": "Spacer needs your camera to take a photo of your parking spot."
+        }
       ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "248102fe-a13c-45ca-b83d-5478808157cb"
-      }
-    }
+    ]
   }
 }

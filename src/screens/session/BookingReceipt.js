@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
@@ -70,10 +71,16 @@ export default function BookingReceipt({ route, navigation }) {
 
         <View style={styles.summary}>
           <View style={styles.row}>
-            <Text style={styles.rowLabel}>Final cost</Text>
-            <Text style={styles.rowValueBig}>
-              ₹{Number(booking.final_cost ?? booking.estimated_cost).toFixed(0)}
-            </Text>
+            <Text style={styles.rowLabel}>Parking ({booking.final_cost ? 'actual time' : 'estimate'})</Text>
+            <Text style={styles.rowValue}>₹{Number(payment.subtotal).toFixed(2)}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>Platform fee</Text>
+            <Text style={styles.rowValue}>₹{Number(payment.platform_fee).toFixed(2)}</Text>
+          </View>
+          <View style={[styles.row, styles.rowDivider]}>
+            <Text style={styles.rowLabel}>Total</Text>
+            <Text style={styles.rowValueBig}>₹{Number(payment.amount).toFixed(2)}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Payment status</Text>
@@ -116,7 +123,7 @@ export default function BookingReceipt({ route, navigation }) {
 
             <Button
               title="Done"
-              variant="secondary"
+              variant="outline"
               onPress={() => navigation.popToTop()}
               style={{ marginTop: spacing.lg, borderColor: colors.border }}
             />
@@ -140,6 +147,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
   },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
+  rowDivider: { borderTopWidth: 1, borderTopColor: colors.border, marginTop: 2 },
   rowLabel: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft },
   rowValue: { fontFamily: fonts.bodyMedium, fontSize: 13.5, color: colors.ink },
   rowValueBig: { fontFamily: fonts.display, fontSize: 18, color: colors.ink },

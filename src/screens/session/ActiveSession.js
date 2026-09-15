@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/Button';
 import { getBooking, startBooking, endBooking } from '../../api/bookings.api';
+import { openDirections } from '../../utils/directions';
 import { colors, fonts, radius, spacing } from '../../theme';
 
 // Live elapsed-time readout since the session started. Ticks locally so we
@@ -89,9 +92,24 @@ export default function ActiveSession({ route, navigation }) {
     <SafeAreaView style={styles.screen}>
       <View style={styles.body}>
         <Text style={styles.eyebrow}>{booking.listing_title}</Text>
-        <Text style={styles.status}>
-          {isActive ? 'Session in progress' : isReserved ? 'Spot reserved — not started yet' : booking.status}
-        </Text>
+        <View style={styles.statusRow}>
+          <Text style={styles.status}>
+            {isActive ? 'Session in progress' : isReserved ? 'Spot reserved — not started yet' : booking.status}
+          </Text>
+          {isReserved && booking.listing_lat != null && (
+            <Pressable
+              style={styles.directionsBtn}
+              onPress={() =>
+                openDirections(booking.listing_lat, booking.listing_lng).catch(() =>
+                  Alert.alert('Could not open maps', 'Try again in a moment.')
+                )
+              }
+            >
+              <Ionicons name="navigate-outline" size={15} color={colors.paper} />
+              <Text style={styles.directionsBtnText}>Directions</Text>
+            </Pressable>
+          )}
+        </View>
 
         <View style={styles.timerWrap}>
           <Text style={styles.timer}>{isActive ? formatDuration(elapsed) : '00:00:00'}</Text>
@@ -123,7 +141,19 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.asphalt },
   body: { flex: 1, padding: spacing.xl, justifyContent: 'center' },
   eyebrow: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: '#B9BBB7', marginBottom: 4 },
-  status: { fontFamily: fonts.display, fontSize: 20, color: colors.paper, marginBottom: spacing.xl },
+  statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl },
+  status: { fontFamily: fonts.display, fontSize: 20, color: colors.paper, flexShrink: 1 },
+  directionsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(234,235,232,0.3)',
+    borderRadius: radius.xl,
+    paddingVertical: 6,
+    paddingHorizontal: 11,
+  },
+  directionsBtnText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.paper },
   timerWrap: {
     alignItems: 'center',
     backgroundColor: colors.asphalt2,

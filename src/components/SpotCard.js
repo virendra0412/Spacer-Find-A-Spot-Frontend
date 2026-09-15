@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image } from 'react-native';
 import { colors, fonts, radius, spacing } from '../theme';
+import { API_URL } from '../api/client';
 
 export default function SpotCard({ listing, onPress }) {
   const distanceLabel =
@@ -12,6 +13,9 @@ export default function SpotCard({ listing, onPress }) {
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <View style={styles.photo}>
+        {listing.cover_photo_url ? (
+          <Image source={{ uri: `${API_URL}${listing.cover_photo_url}` }} style={styles.photoImage} />
+        ) : null}
         {listing.status === 'active' ? (
           <View style={styles.availTag}>
             <Text style={styles.availTagText}>Available</Text>
@@ -27,6 +31,9 @@ export default function SpotCard({ listing, onPress }) {
 
         <View style={styles.metaRow}>
           {distanceLabel ? <Text style={styles.meta}>{distanceLabel}</Text> : null}
+          {listing.vehicle_type && listing.vehicle_type !== 'any' ? (
+            <Text style={styles.meta}>· {listing.vehicle_type.toUpperCase()}</Text>
+          ) : null}
           {listing.covered ? <Text style={styles.meta}>· Covered</Text> : null}
         </View>
       </View>
@@ -59,6 +66,10 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
     justifyContent: 'flex-end',
     padding: 4,
+    overflow: 'hidden',
+  },
+  photoImage: {
+    ...StyleSheet.absoluteFillObject,
   },
   availTag: {
     alignSelf: 'flex-start',

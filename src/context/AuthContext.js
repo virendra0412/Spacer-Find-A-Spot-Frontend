@@ -1,17 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getTokens, setTokens, clearTokens } from '../api/client';
 import * as authApi from '../api/auth.api';
+import * as usersApi from '../api/users.api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  // The backend doesn't have a GET /auth/me endpoint yet, so a silent
-  // token refresh on relaunch can prove the session is valid without
-  // giving us the user object back. hasSession tracks "we have a working
-  // token" separately from "we know who this is," so relaunch doesn't
-  // incorrectly bounce the user to the login screen.
-  // TODO(backend): add GET /auth/me and hydrate `user` here instead.
+  // hasSession tracks "we have a working token" separately from "we know
+  // who this is" (`user`), so a relaunch doesn't bounce the user to the
+  // login screen just because hydrating their profile is still in flight.
   const [hasSession, setHasSession] = useState(false);
   const [booting, setBooting] = useState(true);
 
@@ -23,6 +21,10 @@ export function AuthProvider({ children }) {
         const { accessToken } = await authApi.refresh(refreshToken);
         await setTokens({ accessToken });
         setHasSession(true);
+        // Now that we have a valid access token, use it to find out who
+        // it belongs to — this is the piece that used to be a TODO.
+        const me = await usersApi.getMe();
+        setUser(me);
       } catch {
         await clearTokens();
       } finally {
@@ -53,6 +55,15 @@ export function AuthProvider({ children }) {
     setHasSession(false);
   };
 
+  // Re-fetch the current user from the server and update context state —
+  // used after a profile edit so the rest of the app (and a relaunch)
+  // reflects the change without needing a full re-login.
+  const refreshUser = async () => {
+    const me = await usersApi.getMe();
+    setUser(me);
+    return me;
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -61,6 +72,7 @@ export function AuthProvider({ children }) {
       login,
       signup,
       logout,
+      refreshUser,
       setUser,
     }),
     [user, booting, hasSession]

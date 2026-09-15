@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../theme';
 import SearchStack from './SearchStack';
 import HostStack from './HostStack';
+import ProfileStack from './ProfileStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,13 +21,18 @@ export default function AppTabs() {
         tabBarLabelStyle: { fontFamily: fonts.bodyMedium, fontSize: 11 },
         tabBarStyle: { backgroundColor: colors.paper, borderTopColor: colors.border },
         tabBarIcon: ({ color, size }) => {
-          const iconName = route.name === 'SearchStack' ? 'search' : 'business';
+          const iconName = {
+            SearchStack: 'search',
+            HostStack: 'business',
+            ProfileStack: 'person-circle-outline',
+          }[route.name];
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
     >
       <Tab.Screen name="SearchStack" component={SearchStack} options={{ title: 'Find a spot' }} />
       <Tab.Screen name="HostStack" component={HostStack} options={{ title: 'Host' }} />
+      <Tab.Screen name="ProfileStack" component={ProfileStack} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
 }

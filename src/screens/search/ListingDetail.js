@@ -1,9 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Dimensions, Pressable, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import Button from '../../components/Button';
 import { getListing, getListingReviews } from '../../api/listings.api';
+import { openDirections } from '../../utils/directions';
 import { colors, fonts, radius, spacing } from '../../theme';
+import { API_URL } from '../../api/client';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function ListingDetail({ route, navigation }) {
   const { id } = route.params;
@@ -29,21 +35,45 @@ export default function ListingDetail({ route, navigation }) {
   const tags = [
     listing.covered ? 'Covered' : null,
     listing.has_cctv ? 'CCTV' : null,
-    listing.vehicle_size && listing.vehicle_size !== 'any' ? listing.vehicle_size : null,
+    listing.vehicle_type && listing.vehicle_type !== 'any' ? listing.vehicle_type.toUpperCase() : null,
   ].filter(Boolean);
 
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-        <View style={styles.photo}>
+        <View>
+          {listing.photos && listing.photos.length > 0 ? (
+            <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
+              {listing.photos.map((p) => (
+                <Image key={p.id} source={{ uri: `${API_URL}${p.url}` }} style={styles.photoImage} />
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.photo} />
+          )}
           <Text style={styles.availTag}>
             {listing.status === 'active' ? 'Listed & active' : listing.status}
           </Text>
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.h1}>{listing.title}</Text>
-          {listing.address_text ? <Text style={styles.sub}>{listing.address_text}</Text> : null}
+          <View style={styles.titleRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.h1}>{listing.title}</Text>
+              {listing.address_text ? <Text style={styles.sub}>{listing.address_text}</Text> : null}
+            </View>
+            <Pressable
+              style={styles.directionsBtn}
+              onPress={() =>
+                openDirections(listing.lat, listing.lng).catch(() =>
+                  Alert.alert('Could not open maps', 'Try again in a moment.')
+                )
+              }
+            >
+              <Ionicons name="navigate-outline" size={16} color={colors.ink} />
+              <Text style={styles.directionsBtnText}>Directions</Text>
+            </Pressable>
+          </View>
 
           <View style={styles.tagRow}>
             {tags.map((t) => (
@@ -107,11 +137,19 @@ const styles = StyleSheet.create({
   photo: {
     height: 180,
     backgroundColor: colors.asphalt2,
-    justifyContent: 'flex-end',
-    padding: spacing.md,
+  },
+  photoScroll: {
+    height: 220,
+  },
+  photoImage: {
+    width: SCREEN_WIDTH,
+    height: 220,
+    resizeMode: 'cover',
   },
   availTag: {
-    alignSelf: 'flex-start',
+    position: 'absolute',
+    left: spacing.md,
+    bottom: spacing.md,
     backgroundColor: colors.green,
     color: colors.ink,
     fontFamily: fonts.bodySemibold,
@@ -119,8 +157,22 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
     borderRadius: radius.xl,
+    overflow: 'hidden',
   },
   body: { padding: spacing.lg },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  directionsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    borderRadius: radius.xl,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  directionsBtnText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.ink },
   h1: { fontFamily: fonts.display, fontSize: 22, color: colors.ink, marginBottom: 4 },
   sub: { fontFamily: fonts.body, fontSize: 13, color: colors.inkSoft, marginBottom: 14 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },

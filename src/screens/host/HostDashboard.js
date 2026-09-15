@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import StatBox from '../../components/StatBox';
 import Button from '../../components/Button';
@@ -8,10 +9,12 @@ import { colors, fonts, radius, spacing } from '../../theme';
 
 export default function HostDashboard({ navigation }) {
   const queryClient = useQueryClient();
-  const { data: listings, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['my-listings'],
     queryFn: myListings,
   });
+  const listings = data?.listings;
+  const summary = data?.summary;
 
   const toggleStatus = useMutation({
     mutationFn: ({ id, status }) => updateListing(id, { status }),
@@ -24,6 +27,13 @@ export default function HostDashboard({ navigation }) {
         <Text style={styles.eyebrow}>Your listings</Text>
         <Text style={styles.h1}>Host dashboard</Text>
       </View>
+
+      {summary && (
+        <View style={styles.summaryRow}>
+          <StatBox label="Total earned" value={`₹${Number(summary.total_earned).toFixed(0)}`} />
+          <StatBox label="Bookings" value={summary.total_completed_bookings} />
+        </View>
+      )}
 
       {isLoading && <ActivityIndicator style={{ marginTop: 40 }} color={colors.ink} />}
 
@@ -44,7 +54,8 @@ export default function HostDashboard({ navigation }) {
             <Text style={styles.cardSub}>{item.address_text || 'No address set'}</Text>
 
             <View style={styles.statRow}>
-              <StatBox label="Completed bookings" value={item.completed_bookings} />
+              <StatBox label="Earned" value={`₹${Number(item.total_earned).toFixed(0)}`} />
+              <StatBox label="Customers" value={item.unique_customers} />
               <StatBox label="Rate" value={`₹${Number(item.price_per_hour).toFixed(0)}/hr`} />
             </View>
 
@@ -70,7 +81,7 @@ export default function HostDashboard({ navigation }) {
 
             <Button
               title="Edit availability"
-              variant="secondary"
+              variant="outline"
               onPress={() => navigation.navigate('EditAvailability', { listingId: item.id })}
               style={{ marginTop: spacing.sm, borderColor: colors.border }}
             />
@@ -90,6 +101,7 @@ const styles = StyleSheet.create({
   top: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm, paddingBottom: spacing.md },
   eyebrow: { fontFamily: fonts.bodySemibold, fontSize: 11.5, color: colors.inkSoft, marginBottom: 4 },
   h1: { fontFamily: fonts.display, fontSize: 22, color: colors.ink },
+  summaryRow: { flexDirection: 'row', gap: 10, paddingHorizontal: spacing.lg, marginBottom: spacing.md },
   card: {
     backgroundColor: colors.white,
     borderRadius: radius.lg,

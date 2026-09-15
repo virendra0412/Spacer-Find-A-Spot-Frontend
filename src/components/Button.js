@@ -5,7 +5,7 @@ import { colors, fonts, radius, spacing } from '../theme';
 export default function Button({
   title,
   onPress,
-  variant = 'primary', // 'primary' | 'secondary' | 'dark'
+  variant = 'primary', // 'primary' | 'secondary' | 'dark' | 'outline'
   loading = false,
   disabled = false,
   style,
@@ -21,13 +21,14 @@ export default function Button({
         variant === 'primary' && styles.primary,
         variant === 'secondary' && styles.secondary,
         variant === 'dark' && styles.dark,
+        variant === 'outline' && styles.outline,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? colors.ink : colors.paper} />
+        <ActivityIndicator color={variant === 'primary' ? colors.ink : variant === 'outline' ? colors.ink : colors.paper} />
       ) : (
         <Text
           style={[
@@ -35,6 +36,7 @@ export default function Button({
             variant === 'primary' && styles.textPrimary,
             variant === 'secondary' && styles.textSecondary,
             variant === 'dark' && styles.textDark,
+            variant === 'outline' && styles.textOutline,
           ]}
         >
           {title}
@@ -54,6 +56,9 @@ const styles = StyleSheet.create({
   },
   primary: { backgroundColor: colors.amber },
   secondary: {
+    // Light text + translucent light border — legible on DARK screens
+    // only (e.g. Onboarding's colors.ink background). Use `outline`
+    // instead on light/paper/white surfaces.
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'rgba(234,235,232,0.3)',
@@ -61,10 +66,18 @@ const styles = StyleSheet.create({
   dark: {
     backgroundColor: colors.ink,
   },
+  outline: {
+    // Dark text + solid dark-ish border — the light-surface equivalent
+    // of `secondary`.
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
   text: { fontFamily: fonts.bodySemibold, fontSize: 14 },
   textPrimary: { color: colors.ink },
   textSecondary: { color: colors.paper },
   textDark: { color: colors.paper },
+  textOutline: { color: colors.ink },
 });

@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Input from '../../components/Input';
+import PasswordInput from '../../components/PasswordInput';
 import Button from '../../components/Button';
 import { useAuth } from '../../context/AuthContext';
+import { validatePassword, passwordChecklist } from '../../utils/passwordRules';
 import { colors, fonts, spacing } from '../../theme';
 
 export default function Signup({ navigation }) {
@@ -13,11 +16,14 @@ export default function Signup({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const checklist = passwordChecklist(password);
+
   const onSubmit = async () => {
     setError(null);
     if (name.trim().length < 2) return setError('Enter your name.');
     if (phone.trim().length < 8) return setError('Enter a valid phone number.');
-    if (password.length < 8) return setError('Password must be at least 8 characters.');
+    const passwordError = validatePassword(password);
+    if (passwordError) return setError(passwordError);
 
     setLoading(true);
     try {
@@ -45,13 +51,21 @@ export default function Signup({ navigation }) {
             onChangeText={setPhone}
             placeholder="9990001111"
           />
-          <Input
+          <PasswordInput
             label="Password"
-            secureTextEntry
             value={password}
             onChangeText={setPassword}
             placeholder="At least 8 characters"
           />
+          {password.length > 0 && (
+            <View style={styles.checklist}>
+              {checklist.map((rule) => (
+                <Text key={rule.label} style={[styles.checkItem, rule.pass && styles.checkItemPass]}>
+                  {rule.pass ? '✓' : '·'} {rule.label}
+                </Text>
+              ))}
+            </View>
+          )}
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Button title="Create account" onPress={onSubmit} loading={loading} style={{ marginTop: 8 }} />
@@ -70,6 +84,9 @@ const styles = StyleSheet.create({
   body: { flexGrow: 1, justifyContent: 'center', padding: spacing.xl },
   h1: { fontFamily: fonts.display, fontSize: 26, color: colors.ink, marginBottom: 6 },
   sub: { fontFamily: fonts.body, fontSize: 13.5, color: colors.inkSoft, marginBottom: 24 },
+  checklist: { marginTop: -8, marginBottom: 16 },
+  checkItem: { fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft, marginBottom: 2 },
+  checkItemPass: { color: colors.green },
   error: { fontFamily: fonts.body, fontSize: 13, color: '#D9534F', marginBottom: 12 },
   link: {
     fontFamily: fonts.bodyMedium,

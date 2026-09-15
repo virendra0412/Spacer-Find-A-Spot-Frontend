@@ -1,6 +1,6 @@
 import { client } from './client';
 
-export function searchListings({ lat, lng, radiusKm = 3, availableNow }) {
+export function searchListings({ lat, lng, radiusKm = 3, availableNow, vehicleType, maxPrice, covered, sortBy }) {
   return client
     .get('/listings/search', {
       params: {
@@ -8,6 +8,10 @@ export function searchListings({ lat, lng, radiusKm = 3, availableNow }) {
         lng,
         radius_km: radiusKm,
         ...(availableNow ? { available_now: true } : {}),
+        ...(vehicleType ? { vehicle_type: vehicleType } : {}),
+        ...(maxPrice ? { max_price: maxPrice } : {}),
+        ...(covered ? { covered: true } : {}),
+        ...(sortBy ? { sort_by: sortBy } : {}),
       },
     })
     .then((r) => r.data);
@@ -35,4 +39,23 @@ export function updateListing(id, payload) {
 
 export function setAvailability(id, slots) {
   return client.post(`/listings/${id}/availability`, { slots }).then((r) => r.data);
+}
+
+// Photo upload uses FormData — deliberately NOT setting a Content-Type
+// header here. React Native's networking layer sets the correct
+// multipart boundary automatically when it sees a FormData body; setting
+// 'multipart/form-data' manually omits the boundary param and the
+// request silently fails to parse server-side.
+export function uploadListingPhoto(listingId, photo) {
+  const form = new FormData();
+  form.append('photo', {
+    uri: photo.uri,
+    name: photo.fileName || 'photo.jpg',
+    type: photo.mimeType || 'image/jpeg',
+  });
+  return client.post(`/listings/${listingId}/photos`, form).then((r) => r.data);
+}
+
+export function deleteListingPhoto(listingId, photoId) {
+  return client.delete(`/listings/${listingId}/photos/${photoId}`).then((r) => r.data);
 }
