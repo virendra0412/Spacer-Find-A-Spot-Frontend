@@ -18,8 +18,8 @@ export function AuthProvider({ children }) {
       try {
         const { refreshToken } = await getTokens();
         if (!refreshToken) return;
-        const { accessToken } = await authApi.refresh(refreshToken);
-        await setTokens({ accessToken });
+        const { accessToken, refreshToken: rotatedRefreshToken } = await authApi.refresh(refreshToken);
+        await setTokens({ accessToken, refreshToken: rotatedRefreshToken });
         setHasSession(true);
         // Now that we have a valid access token, use it to find out who
         // it belongs to — this is the piece that used to be a TODO.
@@ -50,7 +50,12 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    await clearTokens();
+    const { refreshToken } = await getTokens();
+    try {
+      await authApi.logout(refreshToken);
+    } finally {
+      await clearTokens();
+    }
     setUser(null);
     setHasSession(false);
   };

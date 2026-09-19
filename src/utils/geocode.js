@@ -15,3 +15,24 @@ export async function geocodePlace(query) {
   const { latitude, longitude } = results[0];
   return { latitude, longitude };
 }
+
+export async function searchAddressSuggestions(query) {
+  const trimmed = query.trim();
+  if (trimmed.length < 3) return [];
+
+  const response = await fetch(
+    `https://photon.komoot.io/api/?q=${encodeURIComponent(trimmed)}&limit=5`
+  );
+  if (!response.ok) return [];
+  const data = await response.json();
+
+  return (data.features || []).map((feature) => ({
+    label: feature.properties?.name
+      ? [feature.properties.name, feature.properties.city, feature.properties.country]
+        .filter(Boolean)
+        .join(', ')
+      : feature.properties?.label || trimmed,
+    latitude: feature.geometry.coordinates[1],
+    longitude: feature.geometry.coordinates[0],
+  }));
+}

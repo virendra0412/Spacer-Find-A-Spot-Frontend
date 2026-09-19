@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Pressable, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
+import * as ImagePicker from 'expo-image-picker';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import StatBox from '../../components/StatBox';
@@ -26,11 +27,61 @@ export default function Profile() {
 
   const { data: stats } = useQuery({ queryKey: ['my-stats'], queryFn: usersApi.getMyStats });
   const { data: reviews } = useQuery({ queryKey: ['my-reviews'], queryFn: usersApi.getMyReviews });
+  const { data: verification, refetch: refetchVerification } = useQuery({
+    queryKey: ['my-verification'],
+    queryFn: usersApi.getMyVerification,
+  });
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user?.name ?? '');
   const [email, setEmail] = useState(user?.email ?? '');
   const [saving, setSaving] = useState(false);
+  const [identityDocument, setIdentityDocument] = useState(null);
+  const [identitySelfie, setIdentitySelfie] = useState(null);
+  const [verificationSubmitting, setVerificationSubmitting] = useState(false);
+
+  const pickIdentityImage = async (kind, source) => {
+    const permission = source === 'camera'
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permission needed', 'Allow camera or photo access to submit verification.');
+      return;
+    }
+    const result = source === 'camera'
+      ? await ImagePicker.launchCameraAsync({ quality: 0.7, allowsEditing: true, aspect: [4, 3] })
+      : await ImagePicker.launchImageLibraryAsync({ quality: 0.7, allowsEditing: true, aspect: [4, 3] });
+    if (result.canceled || !result.assets?.[0]) return;
+    if (kind === 'document') setIdentityDocument(result.assets[0]);
+    else setIdentitySelfie(result.assets[0]);
+  };
+
+  const chooseIdentityImage = (kind) => {
+    Alert.alert(kind === 'document' ? 'Identity document' : 'Verification selfie', 'Choose an image source.', [
+      { text: 'Take photo', onPress: () => pickIdentityImage(kind, 'camera') },
+      { text: 'Choose from library', onPress: () => pickIdentityImage(kind, 'library') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const submitIdentityVerification = async () => {
+    if (!identityDocument || !identitySelfie) {
+      Alert.alert('Two images required', 'Add both your identity document and a selfie.');
+      return;
+    }
+    setVerificationSubmitting(true);
+    try {
+      await usersApi.submitVerification({ document: identityDocument, selfie: identitySelfie });
+      setIdentityDocument(null);
+      setIdentitySelfie(null);
+      await refetchVerification();
+      Alert.alert('Submitted', 'Your identity verification is now under review.');
+    } catch (e) {
+      Alert.alert('Could not submit verification', e.response?.data?.error || 'Try again.');
+    } finally {
+      setVerificationSubmitting(false);
+    }
+  };
 
   const onStartEdit = () => {
     setName(user?.name ?? '');
@@ -97,6 +148,28 @@ export default function Profile() {
               <Row label="Phone" value={user.phone} />
               <Row label="Email" value={user.email || '—'} />
               <Button title="Edit profile" variant="outline" onPress={onStartEdit} style={{ marginTop: spacing.sm }} />
+            </>
+          )}
+        </View>
+
+        <Text style={styles.sectionLabel}>Identity verification</Text>
+        <View style={styles.card}>
+          <Row
+            label="Status"
+            value={verification?.status === 'approved' ? 'Approved' : verification?.status === 'pending' ? 'Under review' : verification?.status === 'rejected' ? 'Needs resubmission' : 'Not submitted'}
+          />
+          {verification?.review_note ? <Text style={styles.verificationNote}>{verification.review_note}</Text> : null}
+          {verification?.status !== 'approved' && verification?.status !== 'pending' && (
+            <>
+              <View style={styles.identityRow}>
+                <Pressable style={styles.identityPicker} onPress={() => chooseIdentityImage('document')}>
+                  {identityDocument ? <Image source={{ uri: identityDocument.uri }} style={styles.identityPreview} /> : <Text style={styles.identityPlaceholder}>ID document</Text>}
+                </Pressable>
+                <Pressable style={styles.identityPicker} onPress={() => chooseIdentityImage('selfie')}>
+                  {identitySelfie ? <Image source={{ uri: identitySelfie.uri }} style={styles.identityPreview} /> : <Text style={styles.identityPlaceholder}>Selfie</Text>}
+                </Pressable>
+              </View>
+              <Button title="Submit for review" onPress={submitIdentityVerification} loading={verificationSubmitting} style={{ marginTop: spacing.sm }} />
             </>
           )}
         </View>
@@ -202,4 +275,9 @@ const styles = StyleSheet.create({
   reviewStars: { fontSize: 13, color: colors.amber },
   reviewMeta: { fontFamily: fonts.body, fontSize: 11, color: colors.inkSoft },
   reviewComment: { fontFamily: fonts.body, fontSize: 13, color: colors.ink, lineHeight: 18 },
+  verificationNote: { fontFamily: fonts.body, fontSize: 12, color: colors.inkSoft, marginBottom: spacing.sm },
+  identityRow: { flexDirection: 'row', gap: 10, marginTop: spacing.sm },
+  identityPicker: { flex: 1, height: 90, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.paper, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  identityPreview: { width: '100%', height: '100%' },
+  identityPlaceholder: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.inkSoft },
 });

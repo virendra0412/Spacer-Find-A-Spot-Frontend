@@ -13,3 +13,7 @@ export function login({ phone, password }) {
 export function refresh(refreshToken) {
   return client.post('/auth/refresh', { refreshToken }).then((r) => r.data);
 }
+
+export function logout(refreshToken) {
+  return client.post('/auth/logout', { refreshToken }).then((r) => r.data);
+}

@@ -1,12 +1,14 @@
 import { client } from './client';
 
-export function searchListings({ lat, lng, radiusKm = 3, availableNow, vehicleType, maxPrice, covered, sortBy }) {
+export function searchListings({ lat, lng, radiusKm = 3, availableNow, vehicleType, maxPrice, covered, sortBy, limit = 20, offset = 0 }) {
   return client
     .get('/listings/search', {
       params: {
         lat,
         lng,
         radius_km: radiusKm,
+        limit,
+        offset,
         ...(availableNow ? { available_now: true } : {}),
         ...(vehicleType ? { vehicle_type: vehicleType } : {}),
         ...(maxPrice ? { max_price: maxPrice } : {}),
@@ -14,15 +16,17 @@ export function searchListings({ lat, lng, radiusKm = 3, availableNow, vehicleTy
         ...(sortBy ? { sort_by: sortBy } : {}),
       },
     })
-    .then((r) => r.data);
+    .then((r) => r.data); // { listings, limit, offset, has_more }
 }
 
 export function getListing(id) {
   return client.get(`/listings/${id}`).then((r) => r.data);
 }
 
-export function getListingReviews(id) {
-  return client.get(`/listings/${id}/reviews`).then((r) => r.data);
+export function getListingReviews(id, { limit, offset } = {}) {
+  return client
+    .get(`/listings/${id}/reviews`, { params: { limit, offset } })
+    .then((r) => r.data); // { reviews, total, limit, offset }
 }
 
 export function myListings() {

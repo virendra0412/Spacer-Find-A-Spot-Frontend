@@ -57,6 +57,22 @@ export default function AdminDashboard({ navigation }) {
             </Text>
             <Text style={styles.disputesBannerLink}>Review →</Text>
           </Pressable>
+          <Pressable
+            style={[styles.disputesBanner, { marginTop: 8 }]}
+            onPress={() => navigation.navigate('AdminUsers')}
+          >
+            <Text style={styles.disputesBannerText}>
+              {overview.users.total} user{overview.users.total === 1 ? '' : 's'} · {overview.users.admins} admin{overview.users.admins === 1 ? '' : 's'}
+            </Text>
+            <Text style={styles.disputesBannerLink}>Manage →</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.disputesBanner, { marginTop: 8 }]}
+            onPress={() => navigation.navigate('AdminVerifications')}
+          >
+            <Text style={styles.disputesBannerText}>Identity submissions</Text>
+            <Text style={styles.disputesBannerLink}>Review →</Text>
+          </Pressable>
         </View>
       )}
 

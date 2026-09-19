@@ -18,11 +18,16 @@ export default function ListingDetail({ route, navigation }) {
     queryKey: ['listing', id],
     queryFn: () => getListing(id),
   });
-  const { data: reviews } = useQuery({
+  const { data: reviewsData } = useQuery({
     queryKey: ['listing-reviews', id],
-    queryFn: () => getListingReviews(id),
+    // Only fetch what's actually shown inline (top 3) — `total` in the
+    // response still gives the accurate full count for the header text,
+    // so there's no need to fetch every review just to count them.
+    queryFn: () => getListingReviews(id, { limit: 3 }),
     enabled: !!listing,
   });
+  const reviews = reviewsData?.reviews ?? [];
+  const reviewsTotal = reviewsData?.total ?? 0;
 
   if (isLoading || !listing) {
     return (
@@ -45,7 +50,11 @@ export default function ListingDetail({ route, navigation }) {
           {listing.photos && listing.photos.length > 0 ? (
             <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
               {listing.photos.map((p) => (
-                <Image key={p.id} source={{ uri: `${API_URL}${p.url}` }} style={styles.photoImage} />
+                <Image
+                  key={p.id}
+                  source={{ uri: p.url.startsWith('http') ? p.url : `${API_URL}${p.url}` }}
+                  style={styles.photoImage}
+                />
               ))}
             </ScrollView>
           ) : (
@@ -93,15 +102,15 @@ export default function ListingDetail({ route, navigation }) {
               <Text style={styles.hostName}>{listing.host_name}</Text>
               <Text style={styles.hostMeta}>
                 {listing.host_rating > 0 ? `${listing.host_rating} rating` : 'No ratings yet'}
-                {reviews ? ` · ${reviews.length} review${reviews.length === 1 ? '' : 's'}` : ''}
+                {reviewsData ? ` · ${reviewsTotal} review${reviewsTotal === 1 ? '' : 's'}` : ''}
               </Text>
             </View>
           </View>
 
-          {reviews && reviews.length > 0 && (
+          {reviews.length > 0 && (
             <View style={{ marginTop: spacing.lg }}>
               <Text style={styles.reviewsHead}>Reviews</Text>
-              {reviews.slice(0, 3).map((r) => (
+              {reviews.map((r) => (
                 <View key={r.id} style={styles.reviewCard}>
                   <Text style={styles.reviewMeta}>{r.author_name} · {r.rating}★</Text>
                   {r.comment ? <Text style={styles.reviewComment}>{r.comment}</Text> : null}
