@@ -1,7 +1,7 @@
 {
   "name": "spacer-app",
   "version": "1.0.0",
-  "main": "node_modules/expo/AppEntry.js",
+  "main": "index.js",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -12,30 +12,33 @@
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.1",
     "@expo-google-fonts/oswald": "^0.4.1",
-    "@expo/vector-icons": "^15.0.0",
-    "@react-native-community/datetimepicker": "^8.2.0",
+    "@expo/vector-icons": "^15.1.1",
+    "@react-native-community/datetimepicker": "9.1.0",
     "@react-navigation/bottom-tabs": "^7.0.0",
     "@react-navigation/native": "^7.0.0",
     "@react-navigation/native-stack": "^7.0.0",
     "@tanstack/react-query": "^5.0.0",
     "axios": "^1.7.0",
     "expo": "~57.0.22",
-    "expo-constants": "^57.0.0",
-    "expo-font": "^57.0.0",
-    "expo-image-picker": "~17.0.0",
-    "expo-location": "^57.0.0",
-    "expo-notifications": "~57.0.0",
-    "expo-secure-store": "^57.0.0",
-    "expo-splash-screen": "^57.0.0",
+    "expo-constants": "~57.0.18",
+    "expo-font": "~57.0.4",
+    "expo-image-picker": "~57.0.18",
+    "expo-location": "~57.0.18",
+    "expo-notifications": "~57.0.19",
+    "expo-secure-store": "~57.0.4",
+    "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
-    "react-dom": "^19.2.0",
+    "react-dom": "19.2.3",
     "react-native": "0.86.3",
-    "react-native-safe-area-context": "^5.0.0",
+    "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "^4.0.0",
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
-    "babel-preset-expo": "^57.0.11"
+    "@react-native/debugger-frontend": "^0.86.3",
+    "babel-preset-expo": "^57.0.11",
+    "metro": "^0.84.5",
+    "react-refresh": "0.19.0"
   }
 }

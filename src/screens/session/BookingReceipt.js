@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
+import ReportIssueModal from '../../components/ReportIssueModal';
 import { getBooking, reviewBooking } from '../../api/bookings.api';
 import { getPayment, markPaid } from '../../api/payments.api';
 import { colors, fonts, radius, spacing } from '../../theme';
@@ -18,6 +19,7 @@ export default function BookingReceipt({ route, navigation }) {
   const [comment, setComment] = useState('');
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const { data: booking, isLoading: bookingLoading } = useQuery({
     queryKey: ['booking', bookingId],
@@ -129,7 +131,17 @@ export default function BookingReceipt({ route, navigation }) {
             />
           </>
         )}
+
+        <Text style={styles.reportLink} onPress={() => setReportOpen(true)}>
+          Report an issue with this booking
+        </Text>
       </View>
+
+      <ReportIssueModal
+        visible={reportOpen}
+        onClose={() => setReportOpen(false)}
+        bookingId={bookingId}
+      />
     </SafeAreaView>
   );
 }
@@ -156,4 +168,12 @@ const styles = StyleSheet.create({
   star: { fontSize: 28, color: colors.border },
   starActive: { color: colors.amber },
   thanks: { fontFamily: fonts.bodyMedium, fontSize: 14, color: colors.green, marginTop: spacing.xl },
+  reportLink: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12.5,
+    color: colors.inkSoft,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    marginTop: spacing.xl,
+  },
 });

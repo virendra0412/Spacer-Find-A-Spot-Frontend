@@ -29,7 +29,7 @@ export async function clearTokens() {
   await SecureStore.deleteItemAsync(REFRESH_KEY);
 }
 
-export const client = axios.create({ baseURL: API_URL });
+export const client = axios.create({ baseURL: API_URL, timeout: 10000 });
 
 // Dev-only request/response logging — shows up right in the Expo terminal
 // (or the in-app dev menu's logs) while you test, so you don't need a
@@ -37,7 +37,9 @@ export const client = axios.create({ baseURL: API_URL });
 if (__DEV__) {
   client.interceptors.request.use((config) => {
     config.metadata = { startedAt: Date.now() };
-    const body = config.data ? ` ${JSON.stringify(config.data)}` : '';
+    const body = config.data && !config.url?.startsWith('/auth/')
+      ? ` ${JSON.stringify(config.data)}`
+      : '';
     console.log(`→ ${config.method?.toUpperCase()} ${config.url}${body}`);
     return config;
   });
@@ -78,7 +80,7 @@ client.interceptors.response.use(
     const original = error.config;
     const status = error.response?.status;
 
-    if (status !== 401 || original._retry) {
+    if (status !== 401 || original._retry || original.url?.startsWith('/auth/')) {
       return Promise.reject(error);
     }
     original._retry = true;

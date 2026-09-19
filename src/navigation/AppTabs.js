@@ -1,17 +1,22 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors, fonts } from '../theme';
+import { useAuth } from '../context/AuthContext';
 import SearchStack from './SearchStack';
 import HostStack from './HostStack';
 import ProfileStack from './ProfileStack';
+import AdminStack from './AdminStack';
 
 const Tab = createBottomTabNavigator();
 
-// v1 shows both tabs to everyone (the backend schema defaults every user's
-// role to 'both' — see frontend plan, section 4). If role-gating is added
-// later, read `user.role` from AuthContext here and conditionally omit a tab.
+// v1 shows Search/Host/Profile to everyone (the backend schema defaults
+// every user's role to 'both'). Admin is the one tab that IS gated —
+// only rendered when user.is_admin is true, checked fresh from
+// GET /users/me on every relaunch via AuthContext.
 export default function AppTabs() {
+  const { user } = useAuth();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -25,6 +30,7 @@ export default function AppTabs() {
             SearchStack: 'search',
             HostStack: 'business',
             ProfileStack: 'person-circle-outline',
+            AdminStack: 'shield-checkmark-outline',
           }[route.name];
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -33,6 +39,9 @@ export default function AppTabs() {
       <Tab.Screen name="SearchStack" component={SearchStack} options={{ title: 'Find a spot' }} />
       <Tab.Screen name="HostStack" component={HostStack} options={{ title: 'Host' }} />
       <Tab.Screen name="ProfileStack" component={ProfileStack} options={{ title: 'Profile' }} />
+      {user?.is_admin && (
+        <Tab.Screen name="AdminStack" component={AdminStack} options={{ title: 'Admin' }} />
+      )}
     </Tab.Navigator>
   );
 }

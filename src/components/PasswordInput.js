@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TextInput, View, Text, StyleSheet, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors, fonts, radius, spacing } from '../theme';
 
 // Same look as Input.js, but manages its own show/hide state — every

@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import Button from '../../components/Button';
-import { getBooking, startBooking, endBooking } from '../../api/bookings.api';
+import ReportIssueModal from '../../components/ReportIssueModal';
+import { getBooking, startBooking, endBooking, extendBooking } from '../../api/bookings.api';
 import { openDirections } from '../../utils/directions';
 import { colors, fonts, radius, spacing } from '../../theme';
 
@@ -36,6 +37,7 @@ export default function ActiveSession({ route, navigation }) {
   const { bookingId } = route.params;
   const queryClient = useQueryClient();
   const [actionLoading, setActionLoading] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ['booking', bookingId],
@@ -71,6 +73,25 @@ export default function ActiveSession({ route, navigation }) {
       navigation.replace('BookingReceipt', { bookingId });
     } catch (e) {
       Alert.alert('Could not end session', e.response?.data?.error || 'Try again.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleExtend = async (hours) => {
+    setActionLoading(true);
+    try {
+      await extendBooking(bookingId, hours);
+      invalidate();
+    } catch (e) {
+      if (e.response?.status === 409) {
+        Alert.alert(
+          "Can't extend that long",
+          'Someone else has this spot reserved right after your current window. Try a shorter extension.'
+        );
+      } else {
+        Alert.alert('Could not extend', e.response?.data?.error || 'Try again.');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -121,6 +142,24 @@ export default function ActiveSession({ route, navigation }) {
           <Text style={styles.costValue}>₹{estimatedCost}</Text>
         </View>
 
+        {isActive && (
+          <>
+            <Text style={styles.extendLabel}>Need more time?</Text>
+            <View style={styles.extendRow}>
+              {[1, 2, 4].map((h) => (
+                <Pressable
+                  key={h}
+                  style={styles.extendPill}
+                  onPress={() => handleExtend(h)}
+                  disabled={actionLoading}
+                >
+                  <Text style={styles.extendPillText}>+{h}h</Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        )}
+
         {isReserved && (
           <Button title="Start session" onPress={handleStart} loading={actionLoading} style={{ marginTop: spacing.xl }} />
         )}
@@ -129,10 +168,22 @@ export default function ActiveSession({ route, navigation }) {
             title="End session & pay"
             onPress={handleEnd}
             loading={actionLoading}
-            style={{ marginTop: spacing.xl }}
+            style={{ marginTop: spacing.lg }}
           />
         )}
+
+        {(isReserved || isActive) && (
+          <Text style={styles.reportLink} onPress={() => setReportOpen(true)}>
+            Report an issue with this spot
+          </Text>
+        )}
       </View>
+
+      <ReportIssueModal
+        visible={reportOpen}
+        onClose={() => setReportOpen(false)}
+        bookingId={bookingId}
+      />
     </SafeAreaView>
   );
 }
@@ -154,6 +205,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
   },
   directionsBtnText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.paper },
+  reportLink: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12.5,
+    color: '#B9BBB7',
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    marginTop: spacing.lg,
+  },
   timerWrap: {
     alignItems: 'center',
     backgroundColor: colors.asphalt2,
@@ -173,4 +232,16 @@ const styles = StyleSheet.create({
   },
   costLabel: { fontFamily: fonts.body, fontSize: 13, color: '#B9BBB7' },
   costValue: { fontFamily: fonts.display, fontSize: 18, color: colors.paper },
+  extendLabel: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: '#B9BBB7', marginTop: spacing.lg, marginBottom: 8 },
+  extendRow: { flexDirection: 'row', gap: 8 },
+  extendPill: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(234,235,232,0.25)',
+    backgroundColor: colors.asphalt2,
+  },
+  extendPillText: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.paper },
 });

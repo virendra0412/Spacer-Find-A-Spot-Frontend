@@ -22,6 +22,10 @@ export function endBooking(id) {
   return client.post(`/bookings/${id}/end`).then((r) => r.data);
 }
 
+export function extendBooking(id, additionalHours) {
+  return client.post(`/bookings/${id}/extend`, { additional_hours: additionalHours }).then((r) => r.data);
+}
+
 export function cancelBooking(id) {
   return client.post(`/bookings/${id}/cancel`).then((r) => r.data);
 }

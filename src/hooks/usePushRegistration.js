@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { registerDevice } from '../api/devices.api';
@@ -13,13 +12,19 @@ import { registerDevice } from '../api/devices.api';
 // will surface that clearly instead of silently doing nothing — see the
 // 'not-configured' status below.
 export function usePushRegistration() {
-  const [status, setStatus] = useState('idle'); // idle | registering | registered | denied | not-configured | error
+  const [status, setStatus] = useState('idle'); // idle | registering | registered | denied | not-configured | expo-go | error
   const [error, setError] = useState(null);
 
   const register = useCallback(async () => {
     setStatus('registering');
     setError(null);
     try {
+      if (Constants.appOwnership === 'expo' || Constants.executionEnvironment === 'storeClient') {
+        setStatus('expo-go');
+        return;
+      }
+
+      const Notifications = require('expo-notifications');
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
       if (!projectId) {
         setStatus('not-configured');

@@ -16,6 +16,7 @@ const PUSH_STATUS_LABEL = {
   registered: 'Enabled on this device',
   denied: 'Permission denied — enable in system settings',
   'not-configured': 'Not available in this build yet',
+  'expo-go': 'Unavailable in Expo Go — use a development build',
   error: 'Something went wrong — try again',
 };
 
@@ -102,8 +103,11 @@ export default function Profile() {
 
         <Text style={styles.sectionLabel}>Notifications</Text>
         <View style={styles.card}>
-          <Row label="Push notifications" value={PUSH_STATUS_LABEL[push.status]} />
-          {push.status !== 'registered' && (
+          <Row
+            label="Push notifications"
+            value={push.status === 'error' && push.error ? push.error : PUSH_STATUS_LABEL[push.status]}
+          />
+          {push.status !== 'registered' && push.status !== 'expo-go' && (
             <Button
               title="Enable push notifications"
               variant="outline"
