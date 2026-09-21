@@ -9,13 +9,46 @@ build-order rationale.
 ```bash
 npm install
 cp .env.example .env   # then edit EXPO_PUBLIC_API_URL to your backend's LAN IP
-npm start              # scan the QR code with Expo Go
 ```
 
+**This app can no longer run in plain Expo Go.** `expo-notifications`
+needs to actually work, and SDK 53+ removed push notifications from
+Expo Go on Android — that requires native code Expo Go's generic
+pre-built binary doesn't have. `expo-dev-client` and `eas.json` are
+already set up for this — you need a **custom dev client build**
+instead:
+
+```bash
+npx eas build --profile development --platform android
+```
+
+Install the resulting APK on your device once, then for every day-to-day
+run:
+
+```bash
+npx expo start --dev-client
+```
+
+and open the project from inside that installed dev-client app — not
+inside the regular Expo Go app. (You can also build locally instead of
+via EAS with `npx expo run:android`, if you have Android Studio/SDK set
+up — that skips the EAS build queue but needs the native toolchain
+installed.)
+
+### No embedded map, and deliberately so
+
+There's no in-app map view — `react-native-maps` was removed on
+purpose. Rendering a live map inside the app requires a Google Maps
+SDK key tied to a Google Cloud billing account, even though usage
+itself would stay free at this scale; that's a cost/complexity
+tradeoff not worth it for what the app actually needs. Instead:
+Search stays list-only, and "Directions" (on `ListingDetail` and
+`ActiveSession`) opens the real Google Maps app via a plain deep link
+— completely free, no API key, no billing account, ever, since it's
+just launching another app rather than calling a billable API.
+
 Push notifications need this project linked to EAS before they'll work —
-`npx eas init` (needs a free Expo account) sets `extra.eas.projectId` in
-`app.json`. Until that's done, the "Enable push notifications" button in
-Profile will correctly report itself as not-configured rather than crash.
+already done here (`extra.eas.projectId` is set in `app.json`).
 
 Your phone and the backend need to be reachable from each other — `localhost`
 won't work from a physical device. Use your laptop's LAN IP, or deploy the
@@ -50,15 +83,16 @@ Every screen from the plan is wired up and navigable end-to-end:
   horizontal gallery on `ListingDetail` and as a thumbnail on
   `SpotCard`/search results/host dashboard.
 
-## Photo storage — a deliberate v1 tradeoff
+## Photo storage
 
-Photos are stored on the backend's local disk (`spacer-backend/uploads/`)
-and served via a static route, not S3/R2 as the original plan called for.
-That's the honest reason: S3 needs real cloud credentials, and shipping
-code tested only against a mocked upload isn't something I wanted to hand
-you as "done." The API is shaped so swapping to S3 later only touches
-`photos.controller.js` — the DB just stores a URL string either way, and
-the frontend already treats it as an opaque path appended to `API_URL`.
+Photos now upload to **Cloudinary**, not local disk (the earlier version
+of this backend stored them on the server's filesystem — that was
+always meant to be temporary, since most hosting platforms wipe local
+disk on every redeploy). Requires `CLOUDINARY_CLOUD_NAME`,
+`CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` set on the backend —
+see its `.env.example`. Without those set, photo/verification upload
+endpoints return a clean `503 Cloudinary is not configured` rather than
+crashing, but uploads won't work until they're set.
 
 - **Filters & sort**: a "Filters & sort" sheet on Search — sort by
   distance/price low-to-high/price high-to-low, a max-price cap, and a
@@ -92,17 +126,7 @@ the frontend already treats it as an opaque path appended to `API_URL`.
 
 - Photo upload isn't enforced server-side yet — `CreateListing` requires
   one client-side, but `POST /listings` alone (without a follow-up photo
-  upload) still succeeds. If the photo upload step fails after the
-  listing is created, the user is told directly rather than shown a
-  generic error, but there's no retry-upload-only flow yet — the
-  suggested workaround (delete and recreate) is a stopgap.
-- Search is a list view; the plan calls for adding `react-native-maps` once
-  you're testing on a real device (Expo Go's stock build doesn't ship Google
-  Maps API keys — see plan section 2).
-- Cancel-booking has an API function (`cancelBooking` in `bookings.api.js`)
-  but no button wired to it in `MyBookings.js` yet.
-- Push notifications need `npx eas init` before they'll produce a real
-  token — see the note above.
+  upload) still succeeds.
 - Place search resolves to a single geocoded point — it doesn't
   disambiguate between multiple matches (e.g. a locality name that
-  exists in more than one city) or offer autocomplete-as-you-type.
+  exists in more than one city).

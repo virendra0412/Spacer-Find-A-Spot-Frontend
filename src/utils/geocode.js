@@ -26,7 +26,7 @@ export async function searchAddressSuggestions(query) {
   if (!response.ok) return [];
   const data = await response.json();
 
-  return (data.features || []).map((feature) => ({
+  const suggestions = (data.features || []).map((feature) => ({
     label: feature.properties?.name
       ? [feature.properties.name, feature.properties.city, feature.properties.country]
         .filter(Boolean)
@@ -35,4 +35,12 @@ export async function searchAddressSuggestions(query) {
     latitude: feature.geometry.coordinates[1],
     longitude: feature.geometry.coordinates[0],
   }));
+
+  const seen = new Set();
+  return suggestions.filter((suggestion) => {
+    const key = `${suggestion.latitude}:${suggestion.longitude}:${suggestion.label}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

@@ -14,7 +14,10 @@ export default function SpotCard({ listing, onPress }) {
     >
       <View style={styles.photo}>
         {listing.cover_photo_url ? (
-          <Image source={{ uri: `${API_URL}${listing.cover_photo_url}` }} style={styles.photoImage} />
+          <Image
+            source={{ uri: listing.cover_photo_url.startsWith('http') ? listing.cover_photo_url : `${API_URL}${listing.cover_photo_url}` }}
+            style={styles.photoImage}
+          />
         ) : null}
         {listing.status === 'active' ? (
           <View style={styles.availTag}>

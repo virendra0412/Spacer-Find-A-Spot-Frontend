@@ -14,16 +14,16 @@ export function useLocation() {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           setError('Location permission denied — showing a default area instead.');
-          // Fallback so search still works without permission (CG Road,
-          // Ahmedabad — matches the seed data used when testing the backend).
-          setCoords({ latitude: 23.0225, longitude: 72.5714 });
+          // Fallback so search still works without permission. This matches
+          // the Samau/Motavas seed data used for testing.
+          setCoords({ latitude: 22.9099163, longitude: 72.9329566 });
           return;
         }
         const pos = await Location.getCurrentPositionAsync({});
         setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
       } catch (e) {
         setError(e.message);
-        setCoords({ latitude: 23.0225, longitude: 72.5714 });
+        setCoords({ latitude: 22.9099163, longitude: 72.9329566 });
       } finally {
         setLoading(false);
       }

@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator, Pressable, TextInp
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import MapView, { Marker } from 'react-native-maps';
 import Chip from '../../components/Chip';
 import SpotCard from '../../components/SpotCard';
 import FiltersModal from '../../components/FiltersModal';
@@ -22,7 +21,6 @@ export default function Search({ navigation }) {
   const [placeQuery, setPlaceQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [geocoding, setGeocoding] = useState(false);
-  const [viewMode, setViewMode] = useState('list');
   const [availableNow, setAvailableNow] = useState(true);
   const [vehicleType, setVehicleType] = useState(null);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -183,41 +181,13 @@ export default function Search({ navigation }) {
               Filters &amp; sort{activeFiltersCount > 0 ? ` (${activeFiltersCount})` : ''}
             </Text>
           </Pressable>
-          <View style={styles.viewToggle}>
-            <Pressable style={[styles.viewToggleBtn, viewMode === 'list' && styles.viewToggleActive]} onPress={() => setViewMode('list')}>
-              <Ionicons name="list-outline" size={15} color={colors.ink} />
-              <Text style={styles.viewToggleText}>List</Text>
-            </Pressable>
-            <Pressable style={[styles.viewToggleBtn, viewMode === 'map' && styles.viewToggleActive]} onPress={() => setViewMode('map')}>
-              <Ionicons name="map-outline" size={15} color={colors.ink} />
-              <Text style={styles.viewToggleText}>Map</Text>
-            </Pressable>
-          </View>
         </View>
       </View>
 
       {(locLoading || isLoading) && <ActivityIndicator style={{ marginTop: 40 }} color={colors.ink} />}
       {isError && <Text style={styles.emptyText}>Couldn't load nearby spots. Pull down to retry.</Text>}
 
-      {viewMode === 'map' && activeCoords && (
-        <MapView
-          style={styles.map}
-          region={{ latitude: activeCoords.latitude, longitude: activeCoords.longitude, latitudeDelta: 0.06, longitudeDelta: 0.06 }}
-          showsUserLocation={!searchedCoords}
-        >
-          {listings.map((listing) => (
-            <Marker
-              key={listing.id}
-              coordinate={{ latitude: Number(listing.lat), longitude: Number(listing.lng) }}
-              title={listing.title}
-              description={`₹${Number(listing.price_per_hour).toFixed(0)}/hr`}
-              onCalloutPress={() => navigation.navigate('ListingDetail', { id: listing.id })}
-            />
-          ))}
-        </MapView>
-      )}
-
-      {viewMode === 'list' && listings.length > 0 && (
+      {listings.length > 0 && (
         <FlatList
           data={listings}
           keyExtractor={(item) => item.id}
@@ -270,11 +240,6 @@ const styles = StyleSheet.create({
   controlsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   filtersBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white },
   filtersBtnText: { fontFamily: fonts.bodyMedium, fontSize: 12.5, color: colors.ink },
-  viewToggle: { flexDirection: 'row', borderWidth: 1, borderColor: colors.border, borderRadius: 9, overflow: 'hidden' },
-  viewToggleBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 7, paddingHorizontal: 10, backgroundColor: colors.white },
-  viewToggleActive: { backgroundColor: colors.green },
-  viewToggleText: { fontFamily: fonts.bodyMedium, fontSize: 12, color: colors.ink },
-  map: { flex: 1, minHeight: 300 },
   listHead: { fontFamily: fonts.bodySemibold, fontSize: 12.5, color: colors.inkSoft, marginBottom: 10 },
   emptyText: { fontFamily: fonts.body, fontSize: 13.5, color: colors.inkSoft, textAlign: 'center', marginTop: 40 },
 });

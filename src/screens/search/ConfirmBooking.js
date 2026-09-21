@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Alert, Platform, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform, Pressable, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useQuery } from '@tanstack/react-query';
@@ -98,7 +98,11 @@ export default function ConfirmBooking({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.body}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.h1}>Confirm booking</Text>
         <Text style={styles.sub}>{listing.title}</Text>
 
@@ -167,7 +171,7 @@ export default function ConfirmBooking({ route, navigation }) {
         </View>
 
         <Button title="Confirm & reserve" onPress={onConfirm} loading={submitting} style={{ marginTop: spacing.lg }} />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -182,7 +186,8 @@ function Pill({ label, active, onPress }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.paper },
-  body: { flex: 1, padding: spacing.xl },
+  scroll: { flex: 1 },
+  body: { padding: spacing.xl, paddingBottom: spacing.xl * 2 },
   h1: { fontFamily: fonts.display, fontSize: 24, color: colors.ink, marginBottom: 4 },
   sub: { fontFamily: fonts.body, fontSize: 13.5, color: colors.inkSoft, marginBottom: 24 },
   label: { fontFamily: fonts.bodySemibold, fontSize: 13, color: colors.ink, marginBottom: 10 },
